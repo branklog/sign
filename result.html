@@ -270,7 +270,13 @@ ${imgs}
 function closeModal(){
 document.getElementById('modal').style.display='none';
 }
-
+function showImageInModal(imgUrl){
+  const modalBox = document.querySelector('.modal-box');
+  modalBox.innerHTML = `
+    <button class="close-btn" onclick="closeModal()">닫기</button>
+    <img src="${imgUrl}" style="width:100%;border-radius:18px;">
+  `;
+}
 </script>
 </body>
 </html>
