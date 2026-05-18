@@ -42,6 +42,7 @@ header{
   font-size:34px;
   font-weight:900;
   color:#111;
+  text-decoration:none;
 }
 
 .logo-text span{
@@ -118,10 +119,25 @@ button{
   cursor:pointer;
 }
 
+@media(max-width:768px){
+
+  header{
+    padding:0 20px;
+  }
+
+  .company-logo{
+    height:44px;
+  }
+
+  .logo-text{
+    font-size:26px;
+  }
+
+}
+
 </style>
 </head>
 <body>
-
 
 <header>
 
@@ -133,14 +149,13 @@ button{
       class="company-logo"
     >
 
-    <div class="logo-text">
+    <a href="index.html" class="logo-text">
       WORK<span>BOARD</span>
-    </div>
+    </a>
 
   </div>
 
 </header>
-
 
 <div class="container">
 

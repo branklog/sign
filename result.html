@@ -42,6 +42,7 @@ header{
   font-size:34px;
   font-weight:900;
   color:#111;
+  text-decoration:none;
 }
 
 .logo-text span{
@@ -57,11 +58,25 @@ header{
 .page-title{
   font-size:54px;
   font-weight:900;
-  margin-bottom:50px;
+  margin-bottom:30px;
 }
 
 .page-title span{
   color:#ff2a2a;
+}
+
+.home-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:54px;
+  padding:0 26px;
+  border-radius:14px;
+  background:#d60000;
+  color:#fff;
+  text-decoration:none;
+  font-weight:800;
+  margin-bottom:40px;
 }
 
 .card{
@@ -154,10 +169,34 @@ header{
   text-align:center;
 }
 
+@media(max-width:768px){
+
+  header{
+    padding:0 20px;
+  }
+
+  .company-logo{
+    height:44px;
+  }
+
+  .logo-text{
+    font-size:26px;
+  }
+
+  .page-title{
+    font-size:38px;
+  }
+
+  .top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+}
+
 </style>
 </head>
 <body>
-
 
 <header>
 
@@ -169,20 +208,23 @@ header{
       class="company-logo"
     >
 
-    <div class="logo-text">
+    <a href="index.html" class="logo-text">
       WORK<span>BOARD</span>
-    </div>
+    </a>
 
   </div>
 
 </header>
-
 
 <div class="container">
 
   <div class="page-title">
     <span id="monthTitle"></span>
   </div>
+
+  <a href="index.html" class="home-btn">
+    홈으로 돌아가기
+  </a>
 
   <div id="result"></div>
 
