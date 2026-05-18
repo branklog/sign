@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>작업 조회 결과</title>
+<title>월별 작업내역</title>
 
 <style>
+
 *{
   margin:0;
   padding:0;
@@ -14,128 +15,173 @@
 }
 
 body{
-  background:#f5f5f7;
+  background:#111;
+  color:#fff;
+}
+
+header{
+  width:100%;
+  height:90px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  padding:0 50px;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.company-logo{
+  height:54px;
+}
+
+.logo-text{
+  font-size:34px;
+  font-weight:900;
+  color:#111;
+}
+
+.logo-text span{
+  color:#d60000;
 }
 
 .container{
-  max-width:1100px;
+  max-width:1200px;
   margin:auto;
-  padding:70px 20px;
+  padding:80px 20px;
 }
 
-.title{
-  margin-bottom:40px;
+.page-title{
+  font-size:54px;
+  font-weight:900;
+  margin-bottom:50px;
 }
 
-.title h1{
-  font-size:42px;
-  margin-bottom:12px;
+.page-title span{
+  color:#ff2a2a;
 }
 
 .card{
-  background:#fff;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:24px;
   padding:30px;
   margin-bottom:24px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.05);
-}
-
-.task{
-  padding:18px 0;
-  border-bottom:1px solid #eee;
-}
-
-.task:last-child{
-  border-bottom:none;
 }
 
 .top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:16px;
+  gap:20px;
 }
 
 .left{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:10px;
+}
+
+.date{
+  color:#ff2a2a;
+  font-weight:700;
 }
 
 .company{
-  font-size:18px;
-  font-weight:700;
+  font-size:24px;
+  font-weight:900;
 }
 
 .category{
-  font-size:13px;
-  color:#888;
+  color:#bbb;
+  font-size:14px;
 }
 
 .work-title{
-  color:#444;
+  color:#fff;
+  font-size:18px;
 }
 
 .badge{
-  padding:8px 14px;
+  padding:9px 16px;
   border-radius:30px;
   font-size:13px;
-  font-weight:700;
-  white-space:nowrap;
+  font-weight:800;
 }
 
 .design{
-  background:#d1ecf1;
-  color:#0c5460;
+  background:#16394a;
+  color:#7fd8ff;
 }
 
 .modify{
-  background:#fff3cd;
-  color:#856404;
+  background:#4b3c13;
+  color:#ffd95b;
 }
 
 .wait{
-  background:#f8d7da;
-  color:#721c24;
+  background:#4b1f1f;
+  color:#ff7b7b;
 }
 
 .done{
-  background:#d4edda;
-  color:#155724;
+  background:#17381f;
+  color:#74ff9f;
 }
 
 .memo{
-  margin-top:14px;
-  background:#faf7ff;
-  padding:16px;
+  margin-top:18px;
+  background:rgba(255,255,255,0.06);
   border-radius:16px;
+  padding:18px;
   line-height:1.8;
-  color:#555;
+  color:#ddd;
+}
+
+.work-image{
+  width:100%;
+  margin-top:18px;
+  border-radius:18px;
 }
 
 .empty{
-  background:#fff;
-  padding:60px;
+  background:rgba(255,255,255,0.08);
   border-radius:24px;
+  padding:70px;
   text-align:center;
 }
 
-@media(max-width:768px){
-
-  .top{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-}
 </style>
 </head>
 <body>
 
+
+<header>
+
+  <div class="header-left">
+
+    <img
+      src="dagil-logo.png"
+      alt="대길간판 로고"
+      class="company-logo"
+    >
+
+    <div class="logo-text">
+      WORK<span>BOARD</span>
+    </div>
+
+  </div>
+
+</header>
+
+
 <div class="container">
 
-  <div class="title">
-    <h1 id="dateTitle"></h1>
+  <div class="page-title">
+    <span id="monthTitle"></span>
   </div>
 
   <div id="result"></div>
@@ -143,87 +189,114 @@ body{
 </div>
 
 <script>
+
 const params = new URLSearchParams(window.location.search);
-const date = params.get('date');
 
-const result = document.getElementById('result');
+const month = params.get('month');
 
-const data = JSON.parse(localStorage.getItem('signWorkData')) || {};
+document.getElementById('monthTitle').innerText =
+month + ' 작업내역';
 
-document.getElementById('dateTitle').innerText =
-date + ' 작업 조회 결과';
+const data =
+JSON.parse(localStorage.getItem('signWorkData')) || {};
 
-if(!data[date]){
+const result =
+document.getElementById('result');
 
-  result.innerHTML = `
-    <div class="empty">
-      해당 날짜의 작업 내역이 없습니다.
-    </div>
-  `;
+let html = '';
 
-}else{
+let found = false;
 
-  let html = '';
+for(const date in data){
 
-  data[date].forEach(item => {
+  if(date.startsWith(month)){
 
-    html += `
+    found = true;
+
+    data[date].forEach(item => {
+
+      html += `
 
       <div class="card">
 
-        <div class="task">
+        <div class="top">
 
-          <div class="top">
+          <div class="left">
 
-            <div class="left">
-
-              <div class="company">
-                ${item.company}
-              </div>
-
-              <div class="category">
-                ${item.category}
-              </div>
-
-              <div class="work-title">
-                ${item.title}
-              </div>
-
+            <div class="date">
+              ${date}
             </div>
 
-            <div class="badge ${item.status}">
+            <div class="company">
+              ${item.company}
+            </div>
 
-              ${
-                item.status === 'design'
-                ? '디자인중'
-                : item.status === 'modify'
-                ? '수정중'
-                : item.status === 'wait'
-                ? '대기중'
-                : '완료'
-              }
+            <div class="category">
+              ${item.category}
+            </div>
 
+            <div class="work-title">
+              ${item.title}
             </div>
 
           </div>
 
-          ${
-            item.memo
-            ? `<div class="memo">${item.memo}</div>`
-            : ''
-          }
+          <div class="badge ${item.status}">
+
+            ${
+
+              item.status === 'design'
+              ? '디자인중'
+              : item.status === 'modify'
+              ? '수정중'
+              : item.status === 'wait'
+              ? '대기중'
+              : '완료'
+
+            }
+
+          </div>
 
         </div>
 
+        ${
+
+          item.memo
+          ? `<div class="memo">${item.memo}</div>`
+          : ''
+
+        }
+
+        ${
+
+          item.image
+          ? `<img src="${item.image}" class="work-image">`
+          : ''
+
+        }
+
       </div>
 
-    `;
+      `;
 
-  });
+    })
 
-  result.innerHTML = html;
+  }
 
 }
+
+if(!found){
+
+  html = `
+    <div class="empty">
+      해당 월의 작업내역이 없습니다.
+    </div>
+  `;
+
+}
+
+result.innerHTML = html;
+
 </script>
 
 </body>
