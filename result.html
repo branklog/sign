@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>작업 조회 결과</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Pretendard', sans-serif;
+}
+
+body{
+  background:#f5f5f7;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:70px 20px;
+}
+
+.title{
+  margin-bottom:40px;
+}
+
+.title h1{
+  font-size:42px;
+  margin-bottom:12px;
+}
+
+.card{
+  background:#fff;
+  border-radius:24px;
+  padding:30px;
+  margin-bottom:24px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+.task{
+  padding:18px 0;
+  border-bottom:1px solid #eee;
+}
+
+.task:last-child{
+  border-bottom:none;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+}
+
+.left{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.company{
+  font-size:18px;
+  font-weight:700;
+}
+
+.category{
+  font-size:13px;
+  color:#888;
+}
+
+.work-title{
+  color:#444;
+}
+
+.badge{
+  padding:8px 14px;
+  border-radius:30px;
+  font-size:13px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.design{
+  background:#d1ecf1;
+  color:#0c5460;
+}
+
+.modify{
+  background:#fff3cd;
+  color:#856404;
+}
+
+.wait{
+  background:#f8d7da;
+  color:#721c24;
+}
+
+.done{
+  background:#d4edda;
+  color:#155724;
+}
+
+.memo{
+  margin-top:14px;
+  background:#faf7ff;
+  padding:16px;
+  border-radius:16px;
+  line-height:1.8;
+  color:#555;
+}
+
+.empty{
+  background:#fff;
+  padding:60px;
+  border-radius:24px;
+  text-align:center;
+}
+
+@media(max-width:768px){
+
+  .top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="title">
+    <h1 id="dateTitle"></h1>
+  </div>
+
+  <div id="result"></div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const date = params.get('date');
+
+const result = document.getElementById('result');
+
+const data = JSON.parse(localStorage.getItem('signWorkData')) || {};
+
+document.getElementById('dateTitle').innerText =
+date + ' 작업 조회 결과';
+
+if(!data[date]){
+
+  result.innerHTML = `
+    <div class="empty">
+      해당 날짜의 작업 내역이 없습니다.
+    </div>
+  `;
+
+}else{
+
+  let html = '';
+
+  data[date].forEach(item => {
+
+    html += `
+
+      <div class="card">
+
+        <div class="task">
+
+          <div class="top">
+
+            <div class="left">
+
+              <div class="company">
+                ${item.company}
+              </div>
+
+              <div class="category">
+                ${item.category}
+              </div>
+
+              <div class="work-title">
+                ${item.title}
+              </div>
+
+            </div>
+
+            <div class="badge ${item.status}">
+
+              ${
+                item.status === 'design'
+                ? '디자인중'
+                : item.status === 'modify'
+                ? '수정중'
+                : item.status === 'wait'
+                ? '대기중'
+                : '완료'
+              }
+
+            </div>
+
+          </div>
+
+          ${
+            item.memo
+            ? `<div class="memo">${item.memo}</div>`
+            : ''
+          }
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+  result.innerHTML = html;
+
+}
+</script>
+
+</body>
+</html>
