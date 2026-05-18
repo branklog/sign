@@ -240,8 +240,8 @@ if(task.images&&task.images.length){
 
 imgs+='<div class="modal-images">';
 
-task.images.forEach(img=>{
-imgs+=`<img src="${img}" onclick="window.open('${img}')">`;
+task.images.forEach((img, index)=>{
+  imgs += `<img src="${img}" onclick="showImageInModal('${img}')">`;
 });
 
 imgs+='</div>';
