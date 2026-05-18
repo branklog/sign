@@ -4,300 +4,202 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>작업 등록</title>
-
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Pretendard', sans-serif;
-}
-
-body{
-  background:#111;
-  color:#fff;
-}
-
-header{
-  width:100%;
-  height:90px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  padding:0 50px;
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-.company-logo{
-  height:54px;
-}
-
-.logo-text{
-  font-size:34px;
-  font-weight:900;
-  color:#111;
-  text-decoration:none;
-}
-
-.logo-text span{
-  color:#d60000;
-}
-
-.container{
-  max-width:1000px;
-  margin:auto;
-  padding:80px 20px;
-}
-
-.card{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:24px;
-  padding:40px;
-}
-
-h1{
-  font-size:48px;
-  margin-bottom:40px;
-}
-
-h1 span{
-  color:#ff2a2a;
-}
-
-.input-group{
-  margin-bottom:24px;
-}
-
-label{
-  display:block;
-  margin-bottom:12px;
-  font-weight:700;
-}
-
-input,
-select,
-textarea{
-  width:100%;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:16px;
-  padding:18px;
-  color:#fff;
-  font-size:15px;
-  outline:none;
-}
-
-textarea{
-  min-height:140px;
-}
-
-.preview{
-  margin-top:18px;
-  width:100%;
-  max-height:400px;
-  object-fit:contain;
-  border-radius:18px;
-  display:none;
-}
-
-button{
-  width:100%;
-  height:64px;
-  border:none;
-  border-radius:16px;
-  background:#d60000;
-  color:#fff;
-  font-size:17px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-@media(max-width:768px){
-
-  header{
-    padding:0 20px;
-  }
-
-  .company-logo{
-    height:44px;
-  }
-
-  .logo-text{
-    font-size:26px;
-  }
-
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
+body{background:#111;color:#fff;}
+header{height:90px;background:#fff;display:flex;align-items:center;padding:0 40px;}
+.logo-text{font-size:34px;font-weight:900;color:#111;text-decoration:none;}
+.logo-text span{color:#d60000;}
+.container{max-width:1000px;margin:auto;padding:80px 20px;}
+.card{background:rgba(255,255,255,.08);padding:40px;border-radius:24px;border:1px solid rgba(255,255,255,.08);}
+.home-btn{display:inline-flex;background:#d60000;color:#fff;padding:14px 24px;border-radius:14px;text-decoration:none;margin-bottom:24px;}
+.group{margin-bottom:22px;}
+label{display:block;margin-bottom:10px;font-weight:700;}
+input,select,textarea{width:100%;background:rgba(255,255,255,.12);border:none;border-radius:14px;padding:18px;color:#fff;}
+textarea{min-height:120px;}
+.row{display:flex;gap:12px;margin-bottom:14px;}
+.task-item{background:rgba(255,255,255,.05);padding:18px;border-radius:16px;margin-bottom:16px;}
+.preview-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.preview-image{width:90px;height:90px;object-fit:cover;border-radius:12px;}
+button{height:58px;border:none;border-radius:14px;background:#d60000;color:#fff;font-weight:800;padding:0 24px;cursor:pointer;}
 </style>
 </head>
 <body>
 
 <header>
-
-  <div class="header-left">
-
-    <img
-      src="dagil-logo.png"
-      alt="대길간판 로고"
-      class="company-logo"
-    >
-
-    <a href="index.html" class="logo-text">
-      WORK<span>BOARD</span>
-    </a>
-
-  </div>
-
+<a href="index.html" class="logo-text">WORK<span>BOARD</span></a>
 </header>
 
 <div class="container">
 
-  <div class="card">
+<a href="index.html" class="home-btn">
+홈으로 가기
+</a>
 
-    <h1>
-      <span>작업 등록</span>
-    </h1>
+<div class="card">
 
-    <div class="input-group">
-      <label>의뢰일</label>
-      <input type="date" id="date">
-    </div>
+<div class="group">
+<label>작업 날짜</label>
+<input type="date" id="date">
+</div>
 
-    <div class="input-group">
-      <label>구분</label>
-      <select id="category">
-        <option>디자인</option>
-        <option>간판</option>
-        <option>현수막</option>
-        <option>시트지</option>
-        <option>배너</option>
-      </select>
-    </div>
+<div id="taskWrap"></div>
 
-    <div class="input-group">
-      <label>업체명</label>
-      <input type="text" id="company">
-    </div>
+<button type="button" onclick="addTask()">+ 작업 추가</button>
 
-    <div class="input-group">
-      <label>작업내용</label>
-      <input type="text" id="title">
-    </div>
+<button type="button" onclick="saveAll()" style="margin-top:14px;width:100%;">
+작업 저장
+</button>
 
-    <div class="input-group">
-      <label>상태</label>
-      <select id="status">
-        <option value="design">디자인중</option>
-        <option value="modify">수정중</option>
-        <option value="wait">대기중</option>
-        <option value="done">완료</option>
-      </select>
-    </div>
-
-    <div class="input-group">
-      <label>메모</label>
-      <textarea id="memo"></textarea>
-    </div>
-
-    <div class="input-group">
-      <label>작업 수정 이미지 업로드</label>
-      <input
-        type="file"
-        id="imageInput"
-        accept="image/*"
-      >
-
-      <img
-        id="preview"
-        class="preview"
-      >
-    </div>
-
-    <button onclick="saveWork()">
-      작업 저장
-    </button>
-
-  </div>
+</div>
 
 </div>
 
 <script>
+let taskCount=0;
 
-let imageData = '';
+function addTask(){
 
-document
-.getElementById('imageInput')
-.addEventListener('change', function(e){
+taskCount++;
 
-  const file = e.target.files[0];
+const wrap=document.getElementById('taskWrap');
 
-  if(!file) return;
+const div=document.createElement('div');
 
-  const reader = new FileReader();
+div.className='task-item';
 
-  reader.onload = function(event){
+div.innerHTML=`
 
-    imageData = event.target.result;
+<div class="group">
+<label>작업내용</label>
+<input type="text" class="title">
+</div>
 
-    const preview =
-    document.getElementById('preview');
+<div class="row">
 
-    preview.src = imageData;
+<select class="status">
+<option value="done">완료</option>
+<option value="progress">진행중</option>
+<option value="pending">미완료</option>
+</select>
 
-    preview.style.display = 'block';
+<select class="category">
+<option>간판</option>
+<option>현수막</option>
+<option>배너</option>
+<option>시트지</option>
+<option>디자인</option>
+</select>
 
-  }
+</div>
 
-  reader.readAsDataURL(file);
+<div class="group">
+<label>메모</label>
+<textarea class="memo"></textarea>
+</div>
 
-});
+<div class="group">
+<label>이미지 업로드</label>
+<input type="file" class="images" multiple accept="image/*">
+<div class="preview-list"></div>
+</div>
 
-function saveWork(){
+`;
 
-  const date = document.getElementById('date').value;
-  const category = document.getElementById('category').value;
-  const company = document.getElementById('company').value;
-  const title = document.getElementById('title').value;
-  const status = document.getElementById('status').value;
-  const memo = document.getElementById('memo').value;
+wrap.appendChild(div);
 
-  if(!date || !title){
-    alert('날짜와 작업내용을 입력해주세요.');
-    return;
-  }
+const input=div.querySelector('.images');
+const preview=div.querySelector('.preview-list');
 
-  let data =
-  JSON.parse(localStorage.getItem('signWorkData')) || {};
+input.addEventListener('change',function(e){
 
-  if(!data[date]){
-    data[date] = [];
-  }
+preview.innerHTML='';
 
-  data[date].push({
-    category,
-    company,
-    title,
-    status,
-    memo,
-    image:imageData
-  });
+Array.from(e.target.files).forEach(file=>{
 
-  localStorage.setItem(
-    'signWorkData',
-    JSON.stringify(data)
-  );
+const reader=new FileReader();
 
-  alert('작업이 저장되었습니다.');
+reader.onload=function(ev){
+
+const img=document.createElement('img');
+
+img.src=ev.target.result;
+
+img.className='preview-image';
+
+preview.appendChild(img);
 
 }
 
+reader.readAsDataURL(file);
+
+});
+
+});
+
+}
+
+addTask();
+
+async function saveAll(){
+
+const date=document.getElementById('date').value;
+
+if(!date)return alert('날짜 선택');
+
+const tasks=document.querySelectorAll('.task-item');
+
+let data=JSON.parse(localStorage.getItem('dagilWorkData'))||{};
+
+if(!data[date])data[date]=[];
+
+for(const task of tasks){
+
+const files=Array.from(task.querySelector('.images').files);
+
+const images=[];
+
+for(const file of files){
+
+const base64=await toBase64(file);
+
+images.push(base64);
+
+}
+
+data[date].push({
+
+title:task.querySelector('.title').value,
+status:task.querySelector('.status').value,
+category:task.querySelector('.category').value,
+memo:task.querySelector('.memo').value,
+images:images
+
+});
+
+}
+
+localStorage.setItem('dagilWorkData',JSON.stringify(data));
+
+alert('저장완료');
+
+}
+
+function toBase64(file){
+
+return new Promise((resolve,reject)=>{
+
+const reader=new FileReader();
+
+reader.onload=()=>resolve(reader.result);
+
+reader.onerror=reject;
+
+reader.readAsDataURL(file);
+
+});
+
+}
 </script>
 
 </body>

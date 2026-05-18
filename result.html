@@ -3,341 +3,165 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>월별 작업내역</title>
-
+<title>작업 조회</title>
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Pretendard', sans-serif;
-}
-
-body{
-  background:#111;
-  color:#fff;
-}
-
-header{
-  width:100%;
-  height:90px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  padding:0 50px;
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-.company-logo{
-  height:54px;
-}
-
-.logo-text{
-  font-size:34px;
-  font-weight:900;
-  color:#111;
-  text-decoration:none;
-}
-
-.logo-text span{
-  color:#d60000;
-}
-
-.container{
-  max-width:1200px;
-  margin:auto;
-  padding:80px 20px;
-}
-
-.page-title{
-  font-size:54px;
-  font-weight:900;
-  margin-bottom:30px;
-}
-
-.page-title span{
-  color:#ff2a2a;
-}
-
-.home-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  height:54px;
-  padding:0 26px;
-  border-radius:14px;
-  background:#d60000;
-  color:#fff;
-  text-decoration:none;
-  font-weight:800;
-  margin-bottom:40px;
-}
-
-.card{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:24px;
-  padding:30px;
-  margin-bottom:24px;
-}
-
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:20px;
-}
-
-.left{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.date{
-  color:#ff2a2a;
-  font-weight:700;
-}
-
-.company{
-  font-size:24px;
-  font-weight:900;
-}
-
-.category{
-  color:#bbb;
-  font-size:14px;
-}
-
-.work-title{
-  color:#fff;
-  font-size:18px;
-}
-
-.badge{
-  padding:9px 16px;
-  border-radius:30px;
-  font-size:13px;
-  font-weight:800;
-}
-
-.design{
-  background:#16394a;
-  color:#7fd8ff;
-}
-
-.modify{
-  background:#4b3c13;
-  color:#ffd95b;
-}
-
-.wait{
-  background:#4b1f1f;
-  color:#ff7b7b;
-}
-
-.done{
-  background:#17381f;
-  color:#74ff9f;
-}
-
-.memo{
-  margin-top:18px;
-  background:rgba(255,255,255,0.06);
-  border-radius:16px;
-  padding:18px;
-  line-height:1.8;
-  color:#ddd;
-}
-
-.work-image{
-  width:100%;
-  margin-top:18px;
-  border-radius:18px;
-}
-
-.empty{
-  background:rgba(255,255,255,0.08);
-  border-radius:24px;
-  padding:70px;
-  text-align:center;
-}
-
-@media(max-width:768px){
-
-  header{
-    padding:0 20px;
-  }
-
-  .company-logo{
-    height:44px;
-  }
-
-  .logo-text{
-    font-size:26px;
-  }
-
-  .page-title{
-    font-size:38px;
-  }
-
-  .top{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
+body{background:#111;color:#fff;}
+header{height:90px;background:#fff;display:flex;align-items:center;padding:0 40px;}
+.logo-text{font-size:34px;font-weight:900;color:#111;text-decoration:none;}
+.logo-text span{color:#d60000;}
+.container{max-width:1200px;margin:auto;padding:80px 20px;}
+.home-btn{display:inline-flex;background:#d60000;color:#fff;padding:14px 24px;border-radius:14px;text-decoration:none;margin-bottom:24px;}
+.card{background:rgba(255,255,255,.08);padding:28px;border-radius:24px;margin-bottom:20px;border:1px solid rgba(255,255,255,.08);}
+.badge{display:inline-flex;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:800;}
+.done{background:#17381f;color:#74ff9f;}
+.progress{background:#4b3c13;color:#ffd95b;}
+.pending{background:#4b1f1f;color:#ff7b7b;}
+.image-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.work-image{width:100px;height:100px;object-fit:cover;border-radius:12px;cursor:pointer;}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;}
+.viewer img{max-width:92%;max-height:92%;border-radius:18px;}
 </style>
 </head>
 <body>
 
 <header>
-
-  <div class="header-left">
-
-    <img
-      src="dagil-logo.png"
-      alt="대길간판 로고"
-      class="company-logo"
-    >
-
-    <a href="index.html" class="logo-text">
-      WORK<span>BOARD</span>
-    </a>
-
-  </div>
-
+<a href="index.html" class="logo-text">WORK<span>BOARD</span></a>
 </header>
 
 <div class="container">
 
-  <div class="page-title">
-    <span id="monthTitle"></span>
-  </div>
+<a href="index.html" class="home-btn">
+홈으로 가기
+</a>
 
-  <a href="index.html" class="home-btn">
-    홈으로 돌아가기
-  </a>
+<div id="result"></div>
 
-  <div id="result"></div>
+</div>
 
+<div class="viewer" id="viewer">
+<img id="viewerImg">
 </div>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
+const params=new URLSearchParams(location.search);
 
-const month = params.get('month');
+const mode=params.get('mode');
 
-document.getElementById('monthTitle').innerText =
-month + ' 작업내역';
+const value=params.get('value');
 
-const data =
-JSON.parse(localStorage.getItem('signWorkData')) || {};
+const data=JSON.parse(localStorage.getItem('dagilWorkData'))||{};
 
-const result =
-document.getElementById('result');
+const result=document.getElementById('result');
 
-let html = '';
-
-let found = false;
+let html='';
 
 for(const date in data){
 
-  if(date.startsWith(month)){
+let match=false;
 
-    found = true;
+if(mode==='day' && date===value)match=true;
 
-    data[date].forEach(item => {
+if(mode==='month' && date.startsWith(value))match=true;
 
-      html += `
+if(mode==='year' && date.startsWith(value))match=true;
 
-      <div class="card">
+if(match){
 
-        <div class="top">
+data[date].forEach(item=>{
 
-          <div class="left">
+let imgs='';
 
-            <div class="date">
-              ${date}
-            </div>
+if(item.images && item.images.length){
 
-            <div class="company">
-              ${item.company}
-            </div>
+imgs+='<div class="image-list">';
 
-            <div class="category">
-              ${item.category}
-            </div>
+item.images.forEach(img=>{
 
-            <div class="work-title">
-              ${item.title}
-            </div>
+imgs+=`
+<img
+src="${img}"
+class="work-image"
+onclick="openViewer('${img}')"
+>
+`;
 
-          </div>
+});
 
-          <div class="badge ${item.status}">
-
-            ${
-
-              item.status === 'design'
-              ? '디자인중'
-              : item.status === 'modify'
-              ? '수정중'
-              : item.status === 'wait'
-              ? '대기중'
-              : '완료'
-
-            }
-
-          </div>
-
-        </div>
-
-        ${
-
-          item.memo
-          ? `<div class="memo">${item.memo}</div>`
-          : ''
-
-        }
-
-        ${
-
-          item.image
-          ? `<img src="${item.image}" class="work-image">`
-          : ''
-
-        }
-
-      </div>
-
-      `;
-
-    })
-
-  }
+imgs+='</div>';
 
 }
 
-if(!found){
+html+=`
+<div class="card">
 
-  html = `
-    <div class="empty">
-      해당 월의 작업내역이 없습니다.
-    </div>
-  `;
+<div style="color:#ff6666;margin-bottom:10px;">
+${date}
+</div>
+
+<div style="font-size:24px;font-weight:900;margin-bottom:10px;">
+${item.title}
+</div>
+
+<div style="margin-bottom:14px;">
+${item.category}
+</div>
+
+<div class="badge ${item.status}">
+
+${
+
+item.status==='done'
+?'완료'
+:item.status==='progress'
+?'진행중'
+:'미완료'
 
 }
 
-result.innerHTML = html;
+</div>
+
+<div style="margin-top:16px;line-height:1.8;">
+${item.memo||''}
+</div>
+
+${imgs}
+
+</div>
+`;
+
+});
+
+}
+
+}
+
+if(!html){
+
+html=`
+<div class="card">
+조회 결과가 없습니다.
+</div>
+`;
+
+}
+
+result.innerHTML=html;
+
+function openViewer(src){
+
+document.getElementById('viewer').style.display='flex';
+
+document.getElementById('viewerImg').src=src;
+
+}
+
+document.getElementById('viewer').onclick=function(){
+
+this.style.display='none';
+
+}
 
 </script>
 
