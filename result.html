@@ -117,13 +117,21 @@ width:100%;
 
 </div>
 
+<!-- 기존 모달 유지 -->
 <div class="modal" id="modal">
-<div class="modal-box">
-<button class="close-btn" onclick="closeModal()">닫기</button>
-<div id="modalContent"></div>
-</div>
+  <div class="modal-box">
+    <button class="close-btn" onclick="closeModal()">닫기</button>
+    <div id="modalContent"></div>
+  </div>
 </div>
 
+<!-- 🆕 이미지 확대용 모달 추가 -->
+<div class="modal" id="imageModal" onclick="closeImageModal()" style="display:none; background:rgba(0,0,0,.95);">
+  <div style="max-width:90%; max-height:90vh; position:relative; display:flex; flex-direction:column; align-items:center; gap:15px;">
+    <img id="expandedImage" src="" style="max-width:100%; max-height:80vh; border-radius:18px; object-fit:contain;">
+    <button class="close-btn" onclick="closeImageModal()">확대 닫기</button>
+  </div>
+</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -270,12 +278,16 @@ ${imgs}
 function closeModal(){
 document.getElementById('modal').style.display='none';
 }
+// 이미지를 클릭했을 때 작동하는 함수 (새 이미지 모달을 열어줌)
 function showImageInModal(imgUrl){
-  const modalBox = document.querySelector('.modal-box');
-  modalBox.innerHTML = `
-    <button class="close-btn" onclick="closeModal()">닫기</button>
-    <img src="${imgUrl}" style="width:100%;border-radius:18px;">
-  `;
+  document.getElementById('expandedImage').src = imgUrl;
+  document.getElementById('imageModal').style.display = 'flex';
+}
+
+// 확대된 이미지 모달을 닫는 함수
+function closeImageModal(){
+  document.getElementById('imageModal').style.display = 'none';
+  document.getElementById('expandedImage').src = '';
 }
 </script>
 </body>
