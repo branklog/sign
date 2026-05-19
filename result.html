@@ -1,11 +1,13 @@
 
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RESULT</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
 body{background:#111;color:#fff;}
@@ -14,6 +16,32 @@ header{height:90px;background:#fff;display:flex;align-items:center;padding:0 40p
 .company-logo{height:30px;}
 .logo-text{font-size:22px;font-weight:900;color:#d60000;text-decoration:none;}
 .container{max-width:1200px;margin:auto;padding:80px 20px;}
+
+/* 📊 기간 선택 바 및 엑셀 버튼 디자인 */
+.report-range-bar { display:flex; align-items:center; gap:12px; background:rgba(255,255,255,.05); padding:16px 24px; border-radius:18px; border:1px solid rgba(255,255,255,.1); margin-bottom:24px; flex-wrap:wrap; }
+.report-range-bar label { font-size:15px; font-weight:700; color:#fff; }
+.report-range-bar span { color: rgba(255,255,255,0.6); }
+
+/* 📅 달력 아이콘 및 글자색 흰색 고정 패치 */
+.report-range-bar input[type="date"] { 
+  background: rgba(255, 255, 255, 0.1); 
+  border: 1px solid rgba(255, 255, 255, 0.2); 
+  border-radius: 10px; 
+  padding: 10px 16px; 
+  color: #ffffff !important; 
+  font-size: 14px; 
+  outline: none; 
+  font-weight: 600;
+}
+.report-range-bar input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(100%) sepia(100%) srcset(100%);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.excel-btn { background:#217346 !important; color:#fff; font-weight:800; transition: opacity 0.2s; }
+.excel-btn:hover { opacity: 0.9; }
+
 .top-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;}
 .top-btn{display:inline-flex;align-items:center;justify-content:center;height:50px;padding:0 20px;border-radius:14px;background:rgba(255,255,255,.12);color:#fff;text-decoration:none;font-weight:700;border:none;cursor:pointer;}
 .home-btn{background:#d60000;}
@@ -37,61 +65,25 @@ border-radius:18px;
 cursor:pointer;
 transition:.2s;
 }
+.modal-images img:active{ transform:scale(.97); }
 
-.modal-images img:active{
-transform:scale(.97);
+@media(max-width:768px){
+  header{height:64px;padding:0 14px;}
+  .company-logo{height:18px !important;}
+  .logo-text{font-size:14px !important;}
+  .container{padding:50px 14px;}
+  .top-btn{height:42px;font-size:12px;padding:0 12px;}
+  .list-item{padding:14px;gap:10px;flex-direction:column;align-items:flex-start;}
+  .title{font-size:14px;line-height:1.4;}
+  .modal-title{font-size:18px;}
+  .modal-memo{font-size:14px;line-height:1.7;}
+  .modal-images img{width:100%;}
+  .report-range-bar { gap:8px; padding:10px; }
+  .report-range-bar input[type="date"] { width:100%; }
 }
-  @media(max-width:768px){
-
-header{
-height:64px;
-padding:0 14px;
-}
-
-.company-logo{
-height:18px !important;
-}
-
-.logo-text{
-font-size:14px !important;
-}
-
-.container{
-padding:50px 14px;
-}
-
-.top-btn{
-height:42px;
-font-size:12px;
-padding:0 12px;
-}
-
-.list-item{
-padding:14px;
-gap:10px;
-flex-direction:column;
-align-items:flex-start;
-}
-
-.title{
-font-size:14px;
-line-height:1.4;
-}
-
-.modal-title{
-font-size:18px;
-}
-
-.modal-memo{
-font-size:14px;
-line-height:1.7;
-}
-
-.modal-images img{
-width:100%;
-}
-
-}
+.modal-box .status { display: inline-block; }
+.sub-modal { position:fixed; inset:0; background:rgba(0,0,0,.95); display:none; align-items:center; justify-content:center; z-index:10000; cursor:zoom-out; }
+.sub-modal img { max-width:95%; max-height:95vh; border-radius:12px; object-fit:contain; }
 </style>
 </head>
 <body>
@@ -104,20 +96,25 @@ width:100%;
 </header>
 
 <div class="container">
+  <div class="report-range-bar">
+    <label>리포트 기간 :</label>
+    <input type="date" id="start-date">
+    <span>~</span>
+    <input type="date" id="end-date">
+    <button class="top-btn excel-btn" onclick="downloadExcel()">📊 엑셀 다운로드</button>
+  </div>
 
-<div class="top-buttons">
-<a href="index.html" class="top-btn home-btn">홈으로 가기</a>
-<button class="top-btn active" onclick="setFilter('all',this)">전체</button>
-<button class="top-btn" onclick="setFilter('done',this)">완료</button>
-<button class="top-btn" onclick="setFilter('progress',this)">진행중</button>
-<button class="top-btn" onclick="setFilter('pending',this)">미완료</button>
+  <div class="top-buttons">
+    <a href="index.html" class="top-btn home-btn">홈으로 가기</a>
+    <button class="top-btn active" onclick="setFilter('all',this)">전체</button>
+    <button class="top-btn" onclick="setFilter('done',this)">완료</button>
+    <button class="top-btn" onclick="setFilter('progress',this)">진행중</button>
+    <button class="top-btn" onclick="setFilter('pending',this)">미완료</button>
+  </div>
+
+  <div id="result"></div>
 </div>
 
-<div id="result"></div>
-
-</div>
-
-<!-- 기존 모달 유지 -->
 <div class="modal" id="modal">
   <div class="modal-box">
     <button class="close-btn" onclick="closeModal()">닫기</button>
@@ -125,7 +122,6 @@ width:100%;
   </div>
 </div>
 
-<!-- 🆕 이미지 확대용 모달 추가 -->
 <div class="modal" id="imageModal" onclick="closeImageModal()" style="display:none; background:rgba(0,0,0,.95);">
   <div style="max-width:90%; max-height:90vh; position:relative; display:flex; flex-direction:column; align-items:center; gap:15px;">
     <img id="expandedImage" src="" style="max-width:100%; max-height:80vh; border-radius:18px; object-fit:contain;">
@@ -133,161 +129,179 @@ width:100%;
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-
 const supabaseUrl='https://qzzmllbfxamzkkvcdqkp.supabase.co';
-
 const supabaseKey='sb_publishable_D9f3thKe-4PGJ9LbP-vfDw_87L7s-Vu';
-
-const supabaseClient = window.supabase.createClient(
-supabaseUrl,
-supabaseKey
-);
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let allMatchedTasks=[];
 let currentFilter='all';
 
 async function getAllTasks(){
-
-const { data,error } = await supabaseClient
-.from('tasks')
-.select('*')
-.order('id',{ascending:false});
-
-return data || [];
-
+  const { data,error } = await supabaseClient
+    .from('tasks')
+    .select('*')
+    .order('id',{ascending:false});
+  return data || [];
 }
+
 (async()=>{
-const params=new URLSearchParams(location.search);
+  try {
+    const params=new URLSearchParams(location.search);
+    const mode=params.get('mode');
+    const value=params.get('value');
 
-const mode=params.get('mode');
+    const tasks=await getAllTasks();
 
-const value=params.get('value');
+    tasks.forEach(task=>{
+      let match=false; 
 
-const tasks=await getAllTasks();
+      if(mode==='day' && task.date===value) match=true;
+      if(mode==='month' && task.date && task.date.startsWith(value)) match=true;
+      if(mode==='year' && task.date && task.date.startsWith(value)) match = true;
+      if(!mode) match = true; 
 
-tasks.reverse().forEach(task=>{
+      if(match){
+        allMatchedTasks.push(task);
+      }
+    });
 
-let match=true;
+    // 최신 날짜 순서대로 상단 정렬 패치
+    allMatchedTasks.sort((a, b) => {
+      if (b.date !== a.date) {
+        return new Date(b.date) - new Date(a.date);
+      }
+      return b.id - a.id; 
+    });
 
-if(mode==='day'&&task.date===value)match=true;
-if(mode==='month'&&task.date.startsWith(value))match=true;
-if(mode==='year'&&task.date.startsWith(value))match=true;
+    // 달력 초기값 세팅
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('start-date').value = todayStr;
+    document.getElementById('end-date').value = todayStr;
 
-if(match){
-allMatchedTasks.push(task);
-}
-
-});
-
-renderList();
-
+    renderList();
+  } catch (error) {
+    console.error("데이터 로드 중 에러 발생:", error);
+    document.getElementById('result').innerHTML = '<div class="list-item">데이터를 불러오지 못했습니다.</div>';
+  }
 })();
 
 function renderList(){
+  const result=document.getElementById('result');
+  let filtered=allMatchedTasks;
 
-const result=document.getElementById('result');
+  if(currentFilter!=='all'){
+    filtered=allMatchedTasks.filter(task=>task.status===currentFilter);
+  }
 
-let filtered=allMatchedTasks;
+  let html='';
 
-if(currentFilter!=='all'){
-filtered=allMatchedTasks.filter(task=>task.status===currentFilter);
-}
+  filtered.forEach(task=>{
+    html+=`
+    <div class="list-item" onclick='openModal(${JSON.stringify(task)})'>
+      <div class="date">${task.date || ''}</div>
+      <div class="status ${task.status}">
+        ${task.status==='done'?'완료':task.status==='progress'?'진행중':'미완료'}
+      </div>
+      <div class="title">${task.title || ''}</div>
+    </div>
+    `;
+  });
 
-let html='';
+  if(!html){
+    html='<div class="list-item">조회 결과가 없습니다.</div>';
+  }
 
-filtered.forEach(task=>{
-
-html+=`
-<div class="list-item" onclick='openModal(${JSON.stringify(task)})'>
-
-<div class="date">${task.date}</div>
-
-<div class="status ${task.status}">
-${task.status==='done'?'완료':task.status==='progress'?'진행중':'미완료'}
-</div>
-
-<div class="title">${task.title}</div>
-
-</div>
-`;
-
-});
-
-if(!html){
-html='<div class="list-item">조회 결과가 없습니다.</div>';
-}
-
-result.innerHTML=html;
-
+  result.innerHTML=html;
 }
 
 function setFilter(type,btn){
-
-currentFilter=type;
-
-document.querySelectorAll('.top-btn').forEach(el=>{
-el.classList.remove('active');
-});
-
-btn.classList.add('active');
-
-renderList();
-
+  currentFilter=type;
+  document.querySelectorAll('.top-btn').forEach(el=>{
+    el.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderList();
 }
 
 function openModal(task){
+  document.getElementById('modal').style.display='flex';
+  let imgs='';
 
-document.getElementById('modal').style.display='flex';
+  if(task.images && task.images.length){
+    imgs+='<div class="modal-images">';
+    task.images.forEach((img)=>{
+      if(img) {
+        imgs += `<img src="${img}" onclick="showImageInModal('${img}')">`;
+      }
+    });
+    imgs+='</div>';
+  }
 
-let imgs='';
-
-if(task.images&&task.images.length){
-
-imgs+='<div class="modal-images">';
-
-task.images.forEach((img, index)=>{
-  imgs += `<img src="${img}" onclick="showImageInModal('${img}')">`;
-});
-
-imgs+='</div>';
-
-}
-
-document.getElementById('modalContent').innerHTML=`
-
-<div class="date">${task.date}</div>
-
-<div class="modal-title">${task.title}</div>
-
-<div class="status ${task.status}">
-${task.status==='done'?'완료':task.status==='progress'?'진행중':'미완료'}
-</div>
-
-<div class="modal-memo">${task.memo||''}</div>
-
-${imgs}
-
-`;
-
+  document.getElementById('modalContent').innerHTML=`
+    <div class="date">${task.date || ''}</div>
+    <div class="modal-title">${task.title || ''}</div>
+    <div class="status ${task.status}">
+      ${task.status==='done'?'완료':task.status==='progress'?'진행중':'미완료'}
+    </div>
+    <div class="modal-memo">${task.memo||'상세 메모가 없습니다.'}</div>
+    ${imgs}
+  `;
 }
 
 function closeModal(){
-document.getElementById('modal').style.display='none';
+  document.getElementById('modal').style.display='none';
 }
-// 이미지를 클릭했을 때 작동하는 함수 (새 이미지 모달을 열어줌)
+
 function showImageInModal(imgUrl){
   document.getElementById('expandedImage').src = imgUrl;
   document.getElementById('imageModal').style.display = 'flex';
 }
 
-// 확대된 이미지 모달을 닫는 함수
 function closeImageModal(){
   document.getElementById('imageModal').style.display = 'none';
   document.getElementById('expandedImage').src = '';
+}
+
+// 📊 엑셀 다운로드 엔진 함수
+function downloadExcel() {
+  const start = document.getElementById('start-date').value;
+  const end = document.getElementById('end-date').value;
+
+  if(!start || !end) { alert('시작 날짜와 종료 날짜를 모두 선택해주세요.'); return; }
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
+  if(startTime > endTime) { alert('시작 날짜가 종료 날짜보다 클 수 없습니다.'); return; }
+
+  const excelTasks = allMatchedTasks.filter(task => {
+    if(!task.date) return false;
+    const taskTime = new Date(task.date).getTime();
+    return taskTime >= startTime && taskTime <= endTime;
+  });
+
+  if(excelTasks.length === 0) { alert('해당 기간에는 데이터가 존재하지 않습니다.'); return; }
+
+  const excelData = [
+    ['업무 날짜', '진행 상태', '업무 제목/내용', '상세 메모 사항']
+  ];
+
+  excelTasks.forEach(task => {
+    const statusText = task.status === 'done' ? '완료' : task.status === 'progress' ? '진행중' : '미완료';
+    excelData.push([
+      task.date || '',
+      statusText,
+      task.title || '',
+      task.memo || ''
+    ]);
+  });
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+  worksheet['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 45 }, { wch: 60 }];
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, '대길간판 업무기록');
+  XLSX.writeFile(workbook, `대길간판_업무보고서_${start}_~_${end}.xlsx`);
 }
 </script>
 </body>
