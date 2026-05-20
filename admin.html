@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>대길간판 관리자</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Pretendard',sans-serif;}
 body{background:#111;color:#fff;}
@@ -19,6 +20,12 @@ label{display:block;margin-bottom:10px;font-weight:700;}
 input,textarea,select{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;color:#fff;font-size:15px;outline:none;}
 select option{background:#1b1b1b;color:#fff;}
 textarea{min-height:120px;resize:vertical;}
+
+.excel-upload-box { background: rgba(33,115,70,0.08); border: 2px dashed rgba(33,115,70,0.4); padding: 24px; border-radius: 18px; margin-bottom: 25px; }
+.excel-file-label { display: flex; align-items: center; justify-content: center; height: 54px; background: #217346; color: #fff; font-weight: 800; border-radius: 12px; cursor: pointer; font-size: 15px; transition: background 0.2s; margin-top: 10px; }
+.excel-file-label:hover { background: #1a5c38; }
+#excel-file-input { display: none; }
+
 .task{background:rgba(255,255,255,.05);padding:20px;border-radius:18px;margin-bottom:18px;}
 .preview-list{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;}
 .preview-wrap{position:relative;width:90px;height:90px;}
@@ -54,12 +61,16 @@ header{padding:0 20px;}
 <div class="container">
 <a href="index.html" class="home-btn">홈으로 가기</a>
 <div class="card">
-<div class="group">
-<label>업무 날짜</label>
-<input type="date" id="date">
+
+<div class="excel-upload-box">
+  <label style="color: #69f0ae; font-size: 15px;">📊 엑셀 서류로 한번에 대량 업로드하기</label>
+  <p style="font-size: 12px; color: #bbb; margin-top: 4px; line-height: 1.5;">[순서 고정] A열: 날짜 | B열: 업무내용 | C열: 상태(완료/진행중) | D열: 메모</p>
+  <label for="excel-file-input" class="excel-file-label">📊 엑셀 파일(.xlsx) 선택하여 목록 자동 만들기</label>
+  <input type="file" id="excel-file-input" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
 </div>
+
 <div id="tasks"></div>
-<button class="main-btn" onclick="addTask()">+ 업무 추가</button>
+<button class="main-btn" onclick="addTask()">+ 업무 직접 추가</button>
 <button class="main-btn save-btn" onclick="saveAll()">업무 저장</button>
 </div>
 <div class="edit-list" id="editList"></div>
@@ -76,9 +87,7 @@ async function saveTask(task){
 }
 
 async function getTasks(){
-  const { data,error } = await supabaseClient
-    .from('tasks')
-    .select('*');
+  const { data,error } = await supabaseClient.from('tasks').select('*');
   return data || [];
 }
 
@@ -92,9 +101,96 @@ async function updateTask(id,data){
   loadTaskList();
 }
 
+function handleExcelUpload(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    
+    const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+    
+    if(rows.length <= 1) {
+      alert("엑셀 파일에 데이터가 없습니다.");
+      return;
+    }
+
+    let successCount = 0;
+    
+    for(let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if(!row || row.length === 0) continue;
+
+      let excelDate = row[0] ? String(row[0]).trim() : '';
+      const excelTitle = row[1] ? String(row[1]).trim() : '';
+      let excelStatus = row[2] ? String(row[2]).trim() : '완료';
+      const excelMemo = row[3] ? String(row[3]).trim() : '';
+
+      if(excelTitle === '업무 내용 (제목)' || excelTitle === '업무내용' || excelTitle === '제목' || !excelTitle) continue;
+
+      if(excelDate && !isNaN(excelDate) && excelDate.length > 4) {
+        const utc_days  = Math.floor(Number(excelDate) - 25569);
+        const date_info = new Date(utc_days * 86400 * 1000);
+        const y = date_info.getFullYear();
+        const m = String(date_info.getMonth() + 1).padStart(2, '0');
+        const d = String(date_info.getDate()).padStart(2, '0');
+        excelDate = `${y}-${m}-${d}`;
+      }
+
+      let finalStatus = 'done';
+      if(excelStatus.includes('진행') || excelStatus === 'progress') finalStatus = 'progress';
+      if(excelStatus.includes('미') || excelStatus === 'pending') finalStatus = 'pending';
+
+      addTask({
+        title: excelTitle,
+        status: finalStatus,
+        memo: excelMemo,
+        excelDate: excelDate
+      });
+      
+      successCount++;
+    }
+
+    for(let i = 0; i < rows.length; i++) {
+      if(rows[i] && rows[i][0]) {
+        let firstRowDate = String(rows[i][0]).trim();
+        if(firstRowDate.includes('날짜')) continue;
+        if(!isNaN(firstRowDate) && firstRowDate.length > 4) {
+          const utc_days  = Math.floor(Number(firstRowDate) - 25569);
+          const date_info = new Date(utc_days * 86400 * 1000);
+          const y = date_info.getFullYear();
+          const m = String(date_info.getMonth() + 1).padStart(2, '0');
+          const d = String(date_info.getDate()).padStart(2, '0');
+          firstRowDate = `${y}-${m}-${d}`;
+        }
+        if(firstRowDate) {
+          document.getElementById('date').value = firstRowDate;
+          break;
+        }
+      }
+    }
+
+    alert(`성공! 엑셀에서 총 ${successCount}개의 업무를 가져왔습니다.\n하단 목록을 보시고 '업무 저장'을 누르면 최종 완료됩니다.`);
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ✅ 핵심 수정 구역: 처음에 기존 목록 그릴 때 엑셀 전용 변수 때문에 터지지 않도록 안전망 처리 완료
 function addTask(editData=null){
   const div=document.createElement('div');
   div.className='task';
+  
+  if(editData && editData.excelDate) { 
+    div.dataset.rowDate = editData.excelDate; 
+  } else if (editData && editData.date) {
+    div.dataset.rowDate = editData.date; // 기존 데이터 불러올 때 날짜 유지 장치
+  }
+
   div.innerHTML=`
     <div class="group">
       <label>업무내용</label>
@@ -121,13 +217,11 @@ function addTask(editData=null){
     </div>
   `;
   document.getElementById('tasks').appendChild(div);
-
-  if(editData){ div.dataset.editId=editData.id; }
+  if(editData && editData.id){ div.dataset.editId=editData.id; }
   setupImageUpload(div);
 
   if(editData){
-    div.querySelector('.status').value=editData.status;
-    
+    div.querySelector('.status').value = editData.status || 'done';
     let savedImages = editData.images || [];
     if (typeof savedImages === 'string') {
       try { savedImages = JSON.parse(savedImages); } catch(e) { savedImages = [savedImages]; }
@@ -163,31 +257,22 @@ function setupImageUpload(taskElement) {
   input.addEventListener('change', function(e){
     const files = Array.from(e.target.files);
     const MAX_SIZE = 500 * 1024; 
-
     files.forEach(file => {
       if (file.size > MAX_SIZE) {
-        alert(`[용량 초과] '${file.name}' 파일이 너무 큽니다.\n500KB 이하의 사진만 올릴 수 있습니다.`);
+        alert(`[용량 초과] '${file.name}'은 제외되었습니다. (500KB 이하만 가능)`);
         return; 
       }
-
       taskElement.imageFiles.push(file);
       const reader = new FileReader();
       reader.onload = function(ev){
         const wrap = document.createElement('div');
         wrap.className = 'preview-wrap';
-        const img = document.createElement('img');
-        img.src = ev.target.result;
-        img.className = 'preview-image';
-        const del = document.createElement('button');
-        del.className = 'delete-image';
-        del.innerText = '✕';
-        del.onclick = function(){
+        wrap.innerHTML = `<img src="${ev.target.result}" class="preview-image"><button class="delete-image">✕</button>`;
+        wrap.querySelector('.delete-image').onclick = function(){
           const index = taskElement.imageFiles.indexOf(file);
           if(index > -1) taskElement.imageFiles.splice(index, 1);
           wrap.remove();
         }
-        wrap.appendChild(img);
-        wrap.appendChild(del);
         preview.appendChild(wrap);
       }
       reader.readAsDataURL(file);
@@ -196,16 +281,24 @@ function setupImageUpload(taskElement) {
   });
 }
 
+// 최초 켤 때 기본 빈 카드 한 장 띄우기
 addTask();
 
 async function saveAll(){
-  const date=document.getElementById('date').value;
-  if(!date){ alert('날짜를 선택해주세요.'); return; }
-  const tasks=document.querySelectorAll('.task');
+  const mainDate = document.getElementById('date').value;
+  const tasks = document.querySelectorAll('.task');
 
   for(const task of tasks){
-    const finalImages = task.savedImages ? [...task.savedImages] : [];
+    const titleVal = task.querySelector('.title').value.trim();
+    if(!titleVal) continue; 
 
+    const finalDate = task.dataset.rowDate || mainDate;
+    if(!finalDate){
+      alert('날짜가 누락되었습니다. 상단 날짜를 선택하거나 엑셀 날짜를 확인해주세요.');
+      return;
+    }
+
+    const finalImages = task.savedImages ? [...task.savedImages] : [];
     if(task.imageFiles && task.imageFiles.length > 0) {
       for(const file of task.imageFiles){
         finalImages.push(await toBase64(file));
@@ -213,8 +306,8 @@ async function saveAll(){
     }
 
     const data={
-      date,
-      title:task.querySelector('.title').value,
+      date: finalDate,
+      title: titleVal,
       status:task.querySelector('.status').value,
       category:task.querySelector('.category')?.value || '디자인',
       memo:task.querySelector('.memo').value,
@@ -232,6 +325,7 @@ async function saveAll(){
 
   alert('업무 저장 완료');
   document.getElementById('tasks').innerHTML='';
+  document.getElementById('date').value = '';
   addTask();
   loadTaskList();
 }
@@ -241,20 +335,15 @@ async function loadTaskList(){
   const tasks=await getTasks();
   list.innerHTML='';
 
-  // ✅ 핵심 정렬 패치: 날짜(최신순) 정렬을 1순위로 맞추고, 같은 날짜면 ID가 큰 순서대로 완벽히 정렬합니다.
   tasks.sort((a, b) => {
-    if (b.date !== a.date) {
-      return new Date(b.date) - new Date(a.date);
-    }
+    if (b.date !== a.date) return new Date(b.date) - new Date(a.date);
     return b.id - a.id;
   });
 
   tasks.forEach(task=>{
     const div=document.createElement('div');
     div.className='edit-item';
-    
     const taskData = encodeURIComponent(JSON.stringify(task));
-    
     div.innerHTML=`
       <div>
         <div style="font-size:14px;color:#aaa;margin-bottom:8px;">${task.date || ''}</div>
@@ -286,6 +375,7 @@ function toBase64(file){
   });
 }
 
+// 켜자마자 기존 목록을 안전하게 로드합니다.
 loadTaskList();
 </script>
 </body>
