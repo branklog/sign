@@ -64,7 +64,7 @@ header{padding:0 20px;}
 
 <div class="excel-upload-box">
   <label style="color: #69f0ae; font-size: 15px;">📊 엑셀 서류로 한번에 대량 업로드하기</label>
-  <p style="font-size: 12px; color: #bbb; margin-top: 4px; line-height: 1.5;">[순서 고정] A열: 날짜 | B열: 업무내용 | C열: 상태(완료/진행중) | D열: 메모</p>
+  <p style="font-size: 12px; color: #bbb; margin-top: 4px; line-height: 1.5;">A열: 날짜/의뢰일 | B열: 업무내용 | C열: 상태 | D열: 메모</p>
   <label for="excel-file-input" class="excel-file-label">📊 엑셀 파일(.xlsx) 선택하여 목록 자동 만들기</label>
   <input type="file" id="excel-file-input" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
 </div>
@@ -114,13 +114,16 @@ function handleExcelUpload(event) {
     
     const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
     
-    if(rows.length <= 1) {
+    if(rows.length === 0) {
       alert("엑셀 파일에 데이터가 없습니다.");
       return;
     }
 
     let successCount = 0;
     
+    // 기존 입력칸들 싹 청소 후 엑셀 데이터로 채우기
+    document.getElementById('tasks').innerHTML = '';
+
     for(let i = 0; i < rows.length; i++) {
       const row = rows[i];
       if(!row || row.length === 0) continue;
@@ -130,8 +133,27 @@ function handleExcelUpload(event) {
       let excelStatus = row[2] ? String(row[2]).trim() : '완료';
       const excelMemo = row[3] ? String(row[3]).trim() : '';
 
-      if(excelTitle === '업무 내용 (제목)' || excelTitle === '업무내용' || excelTitle === '제목' || !excelTitle) continue;
+      if(excelTitle === '메모' || excelTitle === '업무내용' || excelTitle === '제목' || !excelTitle) continue;
+      if(excelDate.includes('의뢰일') || excelDate.includes('날짜')) continue;
 
+      // '05.01.' 혹은 '05.04' 형태 날짜 강제 세척 보정
+      if(excelDate && (excelDate.includes('.') || excelDate.includes('-'))) {
+        let clean = excelDate.replace(/\./g, '-');
+        if(clean.endsWith('-')) { clean = clean.slice(0, -1); }
+        
+        if(!clean.startsWith('202')) {
+          const parts = clean.split('-');
+          if(parts.length >= 2) {
+            const month = parts[0].padStart(2, '0');
+            const day = parts[1].padStart(2, '0');
+            excelDate = `2026-${month}-${day}`;
+          }
+        } else {
+          excelDate = clean;
+        }
+      }
+
+      // 엑셀 숫자 일련번호 날짜 예외처리
       if(excelDate && !isNaN(excelDate) && excelDate.length > 4) {
         const utc_days  = Math.floor(Number(excelDate) - 25569);
         const date_info = new Date(utc_days * 86400 * 1000);
@@ -139,6 +161,11 @@ function handleExcelUpload(event) {
         const m = String(date_info.getMonth() + 1).padStart(2, '0');
         const d = String(date_info.getDate()).padStart(2, '0');
         excelDate = `${y}-${m}-${d}`;
+      }
+
+      // 날짜가 없거나 깨진 경우 최종 튕김 방지용 오늘 날짜
+      if(!excelDate || excelDate.length < 10) {
+        excelDate = new Date().toISOString().split('T')[0];
       }
 
       let finalStatus = 'done';
@@ -155,43 +182,28 @@ function handleExcelUpload(event) {
       successCount++;
     }
 
-    for(let i = 0; i < rows.length; i++) {
-      if(rows[i] && rows[i][0]) {
-        let firstRowDate = String(rows[i][0]).trim();
-        if(firstRowDate.includes('날짜')) continue;
-        if(!isNaN(firstRowDate) && firstRowDate.length > 4) {
-          const utc_days  = Math.floor(Number(firstRowDate) - 25569);
-          const date_info = new Date(utc_days * 86400 * 1000);
-          const y = date_info.getFullYear();
-          const m = String(date_info.getMonth() + 1).padStart(2, '0');
-          const d = String(date_info.getDate()).padStart(2, '0');
-          firstRowDate = `${y}-${m}-${d}`;
-        }
-        if(firstRowDate) {
-          document.getElementById('date').value = firstRowDate;
-          break;
-        }
-      }
-    }
-
-    alert(`성공! 엑셀에서 총 ${successCount}개의 업무를 가져왔습니다.\n하단 목록을 보시고 '업무 저장'을 누르면 최종 완료됩니다.`);
+    alert(`성공! 엑셀 서류에서 총 ${successCount}개의 업무 카드를 만들었습니다.\n하단 [업무 저장] 버튼을 누르면 최종 완료됩니다.`);
     event.target.value = '';
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ✅ 핵심 수정 구역: 처음에 기존 목록 그릴 때 엑셀 전용 변수 때문에 터지지 않도록 안전망 처리 완료
 function addTask(editData=null){
   const div=document.createElement('div');
   div.className='task';
   
-  if(editData && editData.excelDate) { 
-    div.dataset.rowDate = editData.excelDate; 
-  } else if (editData && editData.date) {
-    div.dataset.rowDate = editData.date; // 기존 데이터 불러올 때 날짜 유지 장치
-  }
+  // 엑셀 혹은 수정을 위해 고유 날짜를 카드 내부에 심어둡니다.
+  let defaultDate = new Date().toISOString().split('T')[0];
+  if(editData && editData.excelDate) { defaultDate = editData.excelDate; }
+  else if(editData && editData.date) { defaultDate = editData.date; }
+  
+  div.dataset.rowDate = defaultDate;
 
   div.innerHTML=`
+    <div class="group">
+      <label>업무 날짜</label>
+      <input type="date" class="task-date" value="${defaultDate}" onchange="this.parentElement.parentElement.dataset.rowDate=this.value">
+    </div>
     <div class="group">
       <label>업무내용</label>
       <input type="text" class="title" value="${editData?.title||''}">
@@ -211,7 +223,7 @@ function addTask(editData=null){
       <textarea class="memo">${editData?.memo||''}</textarea>
     </div>
     <div class="group">
-      <label>이미지 업로드</label>
+      <label>이미지 업로드 (선택)</label>
       <input type="file" class="images" multiple accept="image/*">
       <div class="preview-list"></div>
     </div>
@@ -281,22 +293,19 @@ function setupImageUpload(taskElement) {
   });
 }
 
-// 최초 켤 때 기본 빈 카드 한 장 띄우기
+// 최초 실행 시 기본 빈 칸 생성
 addTask();
 
 async function saveAll(){
-  const mainDate = document.getElementById('date').value;
   const tasks = document.querySelectorAll('.task');
+  let savedCount = 0;
 
   for(const task of tasks){
     const titleVal = task.querySelector('.title').value.trim();
     if(!titleVal) continue; 
 
-    const finalDate = task.dataset.rowDate || mainDate;
-    if(!finalDate){
-      alert('날짜가 누락되었습니다. 상단 날짜를 선택하거나 엑셀 날짜를 확인해주세요.');
-      return;
-    }
+    // ✅ [핵심 수정] 외부 날짜창 의존증 차단 -> 각 카드별 입력 박스 혹은 심어진 고유 날짜를 직접 참조
+    const finalDate = task.querySelector('.task-date').value || task.dataset.rowDate;
 
     const finalImages = task.savedImages ? [...task.savedImages] : [];
     if(task.imageFiles && task.imageFiles.length > 0) {
@@ -308,9 +317,9 @@ async function saveAll(){
     const data={
       date: finalDate,
       title: titleVal,
-      status:task.querySelector('.status').value,
-      category:task.querySelector('.category')?.value || '디자인',
-      memo:task.querySelector('.memo').value,
+      status: task.querySelector('.status').value,
+      category: task.querySelector('.category')?.value || '디자인',
+      memo: task.querySelector('.memo').value,
       images: finalImages
     };
 
@@ -321,13 +330,17 @@ async function saveAll(){
     } else {
       await saveTask(data);
     }
+    savedCount++;
   }
 
-  alert('업무 저장 완료');
-  document.getElementById('tasks').innerHTML='';
-  document.getElementById('date').value = '';
-  addTask();
-  loadTaskList();
+  if(savedCount > 0) {
+    alert('대길간판 데이터가 안전하게 완벽 저장되었습니다!');
+    document.getElementById('tasks').innerHTML='';
+    addTask();
+    loadTaskList();
+  } else {
+    alert('저장할 업무 내용이 입력되지 않았습니다.');
+  }
 }
 
 async function loadTaskList(){
@@ -361,7 +374,6 @@ async function loadTaskList(){
 function startEdit(encodedTask){
   const task = JSON.parse(decodeURIComponent(encodedTask));
   document.getElementById('tasks').innerHTML='';
-  document.getElementById('date').value=task.date;
   addTask(task);
   window.scrollTo({ top:0, behavior:'smooth' });
 }
@@ -375,7 +387,7 @@ function toBase64(file){
   });
 }
 
-// 켜자마자 기존 목록을 안전하게 로드합니다.
+// 켜자마자 데이터베이스 조회 후 목록 로드하도록 세팅
 loadTaskList();
 </script>
 </body>
