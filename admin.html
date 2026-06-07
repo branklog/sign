@@ -83,7 +83,18 @@ const supabaseKey='sb_publishable_D9f3thKe-4PGJ9LbP-vfDw_87L7s-Vu';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 async function saveTask(task){
-  await supabaseClient.from('tasks').insert([task]);
+
+  const { error } =
+    await supabaseClient
+      .from('tasks')
+      .insert([task]);
+
+  if(error){
+    console.error(error);
+    alert(error.message);
+    throw error;
+  }
+
 }
 
 async function getTasks(){
@@ -97,8 +108,21 @@ async function deleteTask(id){
 }
 
 async function updateTask(id,data){
-  await supabaseClient.from('tasks').update(data).eq('id',id);
+
+  const { error } =
+    await supabaseClient
+      .from('tasks')
+      .update(data)
+      .eq('id',id);
+
+  if(error){
+    console.error(error);
+    alert(error.message);
+    throw error;
+  }
+
   loadTaskList();
+
 }
 
 function handleExcelUpload(event) {
@@ -309,10 +333,21 @@ async function saveAll(){
 
     const finalImages = task.savedImages ? [...task.savedImages] : [];
     if(task.imageFiles && task.imageFiles.length > 0) {
-      for(const file of task.imageFiles){
-        finalImages.push(await toBase64(file));
-      }
-    }
+  for(const file of task.imageFiles){
+
+const imageUrl =
+  await uploadImage(file);
+
+if(!imageUrl){
+  alert('이미지 업로드 실패');
+  return;
+}
+
+finalImages.push(imageUrl);
+
+  }
+
+}     
 
     const data={
       date: finalDate,
@@ -377,7 +412,34 @@ function startEdit(encodedTask){
   addTask(task);
   window.scrollTo({ top:0, behavior:'smooth' });
 }
+async function uploadImage(file){
 
+const fileName =
+  Date.now() +
+  '-' +
+  Math.random().toString(36).substring(2,8) +
+  '-' +
+  file.name;
+
+  const { error } =
+    await supabaseClient
+      .storage
+      .from('task-images')
+      .upload(fileName,file);
+
+  if(error){
+    console.error(error);
+    return null;
+  }
+
+  const { data } =
+    supabaseClient
+      .storage
+      .from('task-images')
+      .getPublicUrl(fileName);
+
+  return data.publicUrl;
+}
 function toBase64(file){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
